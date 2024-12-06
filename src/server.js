@@ -1,5 +1,5 @@
 // Import required modules
-require('dotenv').config();
+require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
@@ -25,6 +25,7 @@ const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true }, // Note: Use encryption for production
+  age: { type: Number, required: true },
   createdAt: { type: Date, default: Date.now },
 });
 
@@ -34,11 +35,18 @@ const User = mongoose.model("User", userSchema);
 // POST API for user registration
 app.post("/register", async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, age } = req.body;
 
     // Validate required fields
-    if (!name || !email || !password) {
+    if (!name || !email || !password || age === undefined) {
       return res.status(400).json({ message: "All fields are required" });
+    }
+
+    // Validate age
+    if (isNaN(age) || age < 1 || age > 100) {
+      return res
+        .status(400)
+        .json({ message: "Age must be a number between 1 and 100" });
     }
 
     // Check if the user already exists
@@ -48,11 +56,11 @@ app.post("/register", async (req, res) => {
     }
 
     // Create a new user
-    const newUser = new User({ name, email, password });
+    const newUser = new User({ name, email, password, age });
     await newUser.save();
 
     res
-      .status(201)
+      .status(200)
       .json({ message: "User registered successfully", user: newUser });
   } catch (error) {
     console.error(error);
